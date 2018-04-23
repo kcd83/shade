@@ -10769,21 +10769,24 @@ class OpenStackCloud(
         # domain and group not available in keystone v2.0
         is_keystone_v2 = self._is_client_version('identity', 2)
 
-        filters = {}
+        kwargs = {}
         if not is_keystone_v2 and domain:
-            filters['domain_id'] = data['domain'] = \
+            kwargs['domain_id'] = data['domain'] = \
                 self.get_domain(domain)['id']
 
         if user:
-            data['user'] = self.get_user(user, filters=filters)
+            data['user'] = self.get_user(user, filters=None, **kwargs)
 
         if project:
             # drop domain in favor of project
             data.pop('domain', None)
-            data['project'] = self.get_project(project, filters=filters)
+            if domain:
+                data['project'] = self.get_project(project, filters=None, domain_id=kwargs['domain_id'])
+            else:
+                data['project'] = self.get_project(project, filters=None)
 
         if not is_keystone_v2 and group:
-            data['group'] = self.get_group(group, filters=filters)
+            data['group'] = self.get_group(group, filters=None, **kwargs)
 
         return data
 
